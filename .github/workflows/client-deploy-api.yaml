@@ -1,0 +1,8 @@
+on: [push]
+
+jobs:
+  mi-job:
+    uses: mdelrio96/AUY1104-reposhared/.github/workflows/deploy-api.yaml@main
+    secrets:
+      DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+      DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
