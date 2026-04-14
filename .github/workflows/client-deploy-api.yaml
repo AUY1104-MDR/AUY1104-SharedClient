@@ -1,8 +1,14 @@
-on: [push]
+on:
+  push:
+    tags:
+
 
 jobs:
   mi-job:
-    uses: mdelrio96/AUY1104-reposhared/.github/workflows/deploy-api.yaml@main
+    uses: AUY1104-MDR/AUY1104-SharedWorkflows/.github/workflows/deploy-api.yaml@main
+    with:
+      image-name: demo-api
+      image-tag: ${{ github.ref_name }} #Se toma referencia la misma etiqueta que en git
     secrets:
       DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
       DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}

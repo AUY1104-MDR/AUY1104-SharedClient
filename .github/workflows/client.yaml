@@ -2,4 +2,4 @@ on: [push]
 
 jobs:
   mi-job:
-    uses: mdelrio96/AUY1104-reposhared/.github/workflows/holamundo.yaml@main
+    uses: mdelrio96/AUY1104-SharedWorkflows/.github/workflows/holamundo.yaml@main
