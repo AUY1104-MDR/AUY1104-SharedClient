@@ -1,0 +1,14 @@
+
+# Tests + build Docker sin publicación.
+# Validación no debe dispararse por push a main ni por tags;
+# solo por push a esta rama de integración (equivalente a rama de trabajo).
+# El release (test + build + publicación) sigue en client-deploy-api.yaml al etiquetar.
+
+on:
+  push:
+    branches:
+      - develop
+
+jobs:
+  validar-en-rama:
+    uses: AUY1104-MDR/AUY1104-SharedWorkflows/.github/workflows/validate-api.yaml@main
