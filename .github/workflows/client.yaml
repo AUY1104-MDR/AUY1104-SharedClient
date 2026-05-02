@@ -12,7 +12,7 @@ on:
 
 jobs:
   usar-receta-compartida:
-    uses: mdelrio96/AUY1104-SharedWorkflows/.github/workflows/deploy-api.yaml@main
+    uses: AUY1104-MDR/AUY1104-SharedWorkflows/.github/workflows/deploy-api.yaml@main
 
     # Valores que le “pasamos” a la receta (alineado a deploy-api.yaml en SharedWorkflows)
     with:
