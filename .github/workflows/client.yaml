@@ -7,17 +7,14 @@
 on:
   push:
     tags:
-    # Solo cuando el tag parece una versión: v1.0.0, v2.3.4, etc.
-  workflow_dispatch:
+      - 'v*'
 
 jobs:
   usar-receta-compartida:
     uses: AUY1104-MDR/AUY1104-SharedWorkflows/.github/workflows/deploy-api.yaml@main
 
-    # Valores que le “pasamos” a la receta (alineado a deploy-api.yaml en SharedWorkflows)
     with:
       image-name: demo-api
-      # Mismo nombre que el tag que disparó el workflow (ej. v1.2.3 → la imagen lleva esa “versión”)
       image-tag: ${{ github.ref_name }}
       # Variable de repo (Settings → Secrets and variables → Actions → Variables)
       k3s-server-public-ip: ${{ vars.K3S_SERVER_PUBLIC_IP }}
