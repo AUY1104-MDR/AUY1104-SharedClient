@@ -23,7 +23,7 @@ spec:
     spec:
       containers:
         - name: api
-          image: marcdelrio/demo-api:latest
+          image: marcdelrio/demo-api:no-existe
           imagePullPolicy: Always
           ports:
             - name: http
