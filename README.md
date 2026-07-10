@@ -73,47 +73,7 @@ Acciones del rollback, en orden:
 
 Resultado: ante el error inyectado durante la "Prueba de Fuego", producción sigue (o vuelve a quedar) servida por la última versión sana sin intervención manual.
 
-## 4. Desarrollo realizado (bitácora del EFT)
-
-### 4.1 Punto de partida (estado al cierre del semestre)
-
-| Componente | Estado previo al EFT |
-|---|---|
-| Pipeline de despliegue | `deploy-api.yaml` (SharedWorkflows): estrategia **Rolling**, con `kubectl apply` de toda la carpeta `k8s/` y `rollout status` con `rollout undo` ante fallo. |
-| Riesgo del enfoque | El tráfico productivo alcanzaba la versión nueva **antes** de validar su salud; el rollback actuaba después de la exposición al usuario. |
-| Manifiestos | Un único Deployment `demo-api` (1 réplica, probes `/health`) y un Service NodePort 30090. |
-| Variables de entorno | Sin mecanismo de inyección dinámica hacia el clúster. |
-
-### 4.2 Cambios implementados por ítem del encargo
-
-| Ítem de la pauta | Implementación | Archivos |
-|---|---|---|
-| **Ítem 1** · Plantilla reutilizable de Build y Deploy | El workflow Rolling del semestre se refactorizó en la plantilla `workflow_call` consolidada del repo central, con las etapas de Build y Deploy como jobs encadenados, invocada desde este repo. | `SharedWorkflows: deploy-api.yaml`; `client.yaml` |
-| **Ítem 1** · Variables de entorno dinámicas al clúster | Input `env-vars` (líneas `CLAVE=VALOR`) definido por release en `client.yaml`; la plantilla las aplica con `kubectl set env` al Deployment candidato antes del rollout. `/health` las expone como evidencia. | `client.yaml`, `deploy-api.yaml` (paso 6), `src/lib/ejemplo.js` |
-| **Ítem 2** · Despliegue Blue-Green | Dos Deployments por color generados desde un template (`envsubst`); el Service de producción selecciona por `app`+`color` y el tráfico se conmuta manipulando ese selector con `kubectl patch` (nunca con `apply`, para no pisar el color activo). | `k8s/deployment.template.yml`, `k8s/service.yml`, `deploy-api.yaml` (pasos 2-5 y 9) |
-| **Ítem 2** · Validación de salud antes del 100% | Services de preview por color (30091/30092) permiten consultar `/health` del candidato con reintentos, verificando `"ok":true` y que responde el color esperado, con el tráfico productivo intacto. | `k8s/service-preview-*.yml`, `deploy-api.yaml` (paso 8) |
-| **Ítem 3** · Rollback automático | Paso `if: failure()` que repone el selector en el color estable y escala el candidato a 0 réplicas; cubre fallo de rollout, de validación pre-switch y post-switch. | `deploy-api.yaml` (paso Rollback) |
-| Entregable · README técnico | Este documento: arquitectura, estrategia, remediación, bitácora y guía de demostración. | `README.md` |
-| Calidad · CI en ramas | Validación de tests + build Docker sin publicar en cada push a ramas de trabajo. | `.github/workflows/ci.yaml` |
-
-### 4.3 Decisiones técnicas registradas
-
-1. **Repositorios del semestre, no repositorios nuevos:** la pauta exige entregar el repositorio trabajado durante el semestre con la evolución documentada en los commits; el EFT se implementó como nuevos commits sobre `AUY1104-SharedClient` y `AUY1104-SharedWorkflows`.
-2. **Blue-Green sobre Canary:** switch de tráfico determinista y atómico (patch del selector), validación contra el entorno candidato completo antes de exponer usuarios y reversión instantánea, dado que la versión estable nunca deja de correr.
-3. **Service de producción aplicado solo la primera vez:** re-aplicar `service.yml` en cada despliegue restauraría el selector `color: blue` del manifiesto y movería el tráfico de forma no controlada; tras el primer despliegue solo se gestiona vía `kubectl patch`.
-4. **Candidato defectuoso escalado a 0 (no eliminado):** su Deployment queda disponible para diagnóstico posterior al rollback.
-5. **K3s + Docker Hub en lugar de EKS + ECR:** conforme a la precisión técnica del docente; K3s implementa la misma API estándar de Kubernetes.
-6. **`deploy-api.yaml` se conserva** en el repo central como evidencia de la evolución del pipeline (Rolling → Blue-Green).
-
-### 4.4 Guía de demostración ("Prueba de Fuego")
-
-1. **Provisionar el clúster:** ejecutar `ea2-lab-dispatch-main.yml` en `SharedWorkflows` (Terraform → EC2 + K3s) y registrar la IP pública en `vars.K3S_SERVER_PUBLIC_IP` de este repo.
-2. **Despliegue inicial:** publicar un tag `v*`; el pipeline construye la imagen y despliega el color `blue`, aplica el Service de producción y valida salud. Verificar con `curl http://<IP>:30090/health` → responde `"color":"blue"`.
-3. **Release sana:** publicar un nuevo tag; el pipeline despliega `green`, lo valida por `:30092` y conmuta el tráfico. `:30090/health` pasa a responder `"color":"green"` con la nueva `version`.
-4. **Release con error (simulación del caos):** publicar un tag con un fallo (por ejemplo, `/health` retornando 500 o una imagen que no arranca). El pipeline despliega el candidato, la validación falla, el selector **no** se conmuta (o se repone), el candidato se escala a 0 y el job termina en fallo visible en Actions. `:30090/health` sigue respondiendo la versión estable durante todo el proceso.
-5. **Evidencias:** logs del run en GitHub Actions (pasos 8-10 y Rollback), `kubectl get deploy,svc,pods -l app=techmarket-orders` del paso final, y salidas de `curl` antes/durante/después.
-
-## 5. Estructura del repositorio
+## 4. Estructura del repositorio
 
 | Ruta | Propósito |
 |---|---|
@@ -127,7 +87,7 @@ Resultado: ante el error inyectado durante la "Prueba de Fuego", producción sig
 | `.github/workflows/client.yaml` | Pipeline de release: Build → Deploy Blue-Green (tags `v*`). |
 | `.github/workflows/ci.yaml` | Validación en ramas (tests + build sin publicar). |
 
-## 6. Configuración requerida
+## 5. Configuración requerida
 
 Secrets/variables en este repositorio (o en la organización):
 
@@ -137,7 +97,7 @@ Secrets/variables en este repositorio (o en la organización):
 
 Imagen publicada: `docker.io/<DOCKER_USERNAME>/techmarket-orders:<tag>` (+ `latest`).
 
-## 7. Operación
+## 6. Operación
 
 Publicar una nueva versión:
 
@@ -171,14 +131,3 @@ Variables de entorno de la app:
 | `APP_VERSION` | `dev` | Versión reportada en `/health` (inyectada por el pipeline) |
 | `DEPLOY_COLOR` | `sin-color` | Color Blue-Green (inyectada por el manifiesto/pipeline) |
 | `APP_ENVIRONMENT` | `local` | Entorno reportado en `/health` (inyectada por el pipeline) |
-
-## 8. Declaración de uso de IA
-
-Durante el desarrollo de esta evaluación se utilizó una herramienta de inteligencia artificial generativa como apoyo para la revisión de la estructura de los workflows y la redacción de documentación técnica. Todas las decisiones de diseño (estrategia Blue-Green, puntos de control de salud y mecanismo de rollback), la configuración de la infraestructura y la validación del funcionamiento fueron realizadas y verificadas por el estudiante.
-
-## 9. Referencias
-
-- Kubernetes. (2025). *Deployments*. https://kubernetes.io/docs/concepts/workloads/controllers/deployment/
-- GitHub. (2025). *Reusing workflows*. https://docs.github.com/en/actions/using-workflows/reusing-workflows
-- Humble, J., & Farley, D. (2010). *Continuous Delivery: Reliable Software Releases through Build, Test, and Deployment Automation*. Addison-Wesley.
-- Fowler, M. (2010). *BlueGreenDeployment*. https://martinfowler.com/bliki/BlueGreenDeployment.html
