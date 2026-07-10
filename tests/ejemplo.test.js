@@ -49,7 +49,7 @@ describe('lib/ejemplo', () => {
     it('incluye ok y nombre del servicio', () => {
       const out = healthPayload();
       expect(out.ok).toBe(true);
-      expect(out.servicio).toBe('auy1104-api-ejemplo');
+      expect(out.servicio).toBe('techmarket-orders');
     });
   });
 
