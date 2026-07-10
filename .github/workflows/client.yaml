@@ -33,6 +33,7 @@ jobs:
         APP_NAME=techmarket-orders
         APP_VERSION=${{ github.ref_name }}
         APP_ENVIRONMENT=produccion
+        DEPLOY_COLOR=roto
     secrets:
       DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
       DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
