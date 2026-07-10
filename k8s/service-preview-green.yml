@@ -1,0 +1,20 @@
+# EFT · Service de preview del color GREEN.
+# Permite validar la salud del candidato green sin tocar el tráfico
+# de producción (paso 8 de deploy-api.yaml).
+apiVersion: v1
+kind: Service
+metadata:
+  name: techmarket-orders-preview-green
+  labels:
+    app: techmarket-orders
+    role: preview
+spec:
+  type: NodePort
+  selector:
+    app: techmarket-orders
+    color: green
+  ports:
+    - name: http
+      port: 80
+      targetPort: 3000
+      nodePort: 30092

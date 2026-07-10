@@ -28,10 +28,17 @@ function construirEchoRespuesta(cuerpo) {
   };
 }
 
+// El payload expone las variables de entorno inyectadas dinámicamente por el
+// pipeline (DEPLOY_COLOR, APP_VERSION, APP_ENVIRONMENT): la validación de
+// salud del despliegue Blue-Green verifica contra estos campos qué color y
+// versión están respondiendo realmente.
 function healthPayload() {
   return {
     ok: true,
-    servicio: 'auy1104-api-ejemplo',
+    servicio: process.env.APP_NAME || 'techmarket-orders',
+    version: process.env.APP_VERSION || 'dev',
+    color: process.env.DEPLOY_COLOR || 'sin-color',
+    entorno: process.env.APP_ENVIRONMENT || 'local',
     mensaje: 'El servicio está en ejecución',
   };
 }

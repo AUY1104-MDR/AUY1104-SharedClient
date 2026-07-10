@@ -1,0 +1,18 @@
+# EFT · CI de validación en ramas de trabajo: tests + build Docker
+# sin publicar (reutiliza validate-api.yaml del repo central).
+# Evita que llegue a main código que no compila o no pasa los tests.
+
+name: TechMarket Orders · CI (validación en ramas)
+
+on:
+  push:
+    branches:
+      - '**'
+    tags-ignore:
+      - 'v*'
+  pull_request:
+
+jobs:
+  validate:
+    name: Validar (plantilla reutilizable)
+    uses: AUY1104-MDR/AUY1104-SharedWorkflows/.github/workflows/validate-api.yaml@main

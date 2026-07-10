@@ -14,6 +14,13 @@ describe('API HTTP (GET y POST)', () => {
       expect(res.status).toBe(200);
       expect(res.body.ok).toBe(true);
     });
+
+    it('expone color, versión y entorno con valores por defecto fuera del clúster', async () => {
+      const res = await request(app).get('/health');
+      expect(res.body.color).toBe('sin-color');
+      expect(res.body.version).toBe('dev');
+      expect(res.body.entorno).toBe('local');
+    });
   });
 
   describe('GET /api/saludo', () => {

@@ -1,0 +1,46 @@
+# EFT · Template del Deployment Blue-Green del microservicio TechMarket Orders.
+# NO se aplica directamente: la plantilla deploy-api.yaml (SharedWorkflows)
+# lo renderiza con envsubst reemplazando ${APP_NAME}, ${COLOR} e ${IMAGE}.
+# Las variables de entorno dinámicas adicionales se inyectan luego con
+# "kubectl set env" desde el pipeline (input env-vars).
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ${APP_NAME}-${COLOR}
+  labels:
+    app: ${APP_NAME}
+    color: ${COLOR}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ${APP_NAME}
+      color: ${COLOR}
+  template:
+    metadata:
+      labels:
+        app: ${APP_NAME}
+        color: ${COLOR}
+    spec:
+      containers:
+        - name: api
+          image: ${IMAGE}
+          imagePullPolicy: Always
+          ports:
+            - name: http
+              containerPort: 3000
+          env:
+            - name: DEPLOY_COLOR
+              value: "${COLOR}"
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 15
+            periodSeconds: 20

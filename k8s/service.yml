@@ -1,0 +1,21 @@
+# EFT · Service principal (producción) de TechMarket Orders.
+# El selector incluye "color": es el interruptor del Blue-Green.
+# Se aplica SOLO en el primer despliegue (arranca apuntando a blue);
+# después el pipeline lo conmuta con "kubectl patch", nunca con apply,
+# para no pisar el color activo.
+apiVersion: v1
+kind: Service
+metadata:
+  name: techmarket-orders
+  labels:
+    app: techmarket-orders
+spec:
+  type: NodePort
+  selector:
+    app: techmarket-orders
+    color: blue
+  ports:
+    - name: http
+      port: 80
+      targetPort: 3000
+      nodePort: 30090

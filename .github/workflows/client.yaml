@@ -1,8 +1,15 @@
 # ─────────────────────────────────────────────────────────────
-# Este archivo vive en el repo del alumno / del proyecto.
-# Cuando publicas una versión con etiqueta tipo v1.2.3, GitHub ejecuta
-# la receta del repo central (SharedWorkflows) para empaquetar y subir la imagen.
+# EFT · Pipeline CI/CD del microservicio TechMarket Orders.
+# Al publicar un tag v*, invoca la plantilla reutilizable consolidada
+# del repo central (SharedWorkflows/deploy-api.yaml), que encadena:
+#   1. Build  → tests + imagen Docker + Docker Hub
+#   2. Deploy → despliegue Blue-Green en K3s con validación de
+#      salud y rollback automático
+# Las variables de entorno dinámicas del clúster se definen aquí
+# (bloque env-vars) y viajan hacia el Deployment en cada release.
 # ─────────────────────────────────────────────────────────────
+
+name: TechMarket Orders · CI/CD (Build + Blue-Green)
 
 on:
   push:
@@ -11,16 +18,21 @@ on:
   workflow_dispatch:
 
 jobs:
-  usar-receta-compartida:
+  build-deploy:
+    name: Build + Deploy Blue-Green (plantilla reutilizable)
     uses: AUY1104-MDR/AUY1104-SharedWorkflows/.github/workflows/deploy-api.yaml@main
-
     with:
-      image-name: demo-api
+      image-name: techmarket-orders
       image-tag: ${{ github.ref_name }}
+      app-name: techmarket-orders
       # Variable de repo (Settings → Secrets and variables → Actions → Variables)
       k3s-server-public-ip: ${{ vars.K3S_SERVER_PUBLIC_IP }}
-
-    # Mismos secretos que declara workflow_call en deploy-api.yaml (DOCKER_* + SSH al nodo K3s)
+      # Ítem 1 · Variables de entorno dinámicas inyectadas al clúster:
+      # cambian en cada release sin tocar los manifiestos.
+      env-vars: |
+        APP_NAME=techmarket-orders
+        APP_VERSION=${{ github.ref_name }}
+        APP_ENVIRONMENT=produccion
     secrets:
       DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
       DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
